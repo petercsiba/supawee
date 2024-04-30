@@ -1,0 +1,47 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: check-added-large-files
+# Recommended order is isort, black, flake8
+-   repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+    -   id: isort
+        language_version: "3.9.16"
+#        args: ["--profile", "black"]  # this comes from setup.cfg
+-   repo: https://github.com/psf/black
+    # rev is required, great for reproducibility, safety and optimization
+    rev: 23.7.0
+    hooks:
+    -   id: black
+-   repo: https://github.com/pycqa/flake8
+    rev: 3.9.2
+    hooks:
+    -   id: flake8
+#        args: ["--verbose"]
+# Performs security checks - this is too harsh for experimentation
+# TODO(P2, Security): Use Semgred (over Snyk)
+#-   repo: https://github.com/pycqa/bandit
+#    rev: 1.7.5
+#    hooks:
+#    -   id: bandit
+## TODO(P1, Devx, Reliability): One long evening fix those Found 103 errors in 20 files (checked 27 source files
+#-   repo: https://github.com/pre-commit/mirrors-mypy
+#    rev: v0.910
+#    hooks:
+#    -   id: mypy
+#        #  --explicit-package-bases for error: Source file found twice under different module names
+#        args: ["--namespace-package", "--explicit-package-bases"]
+#        exclude: ^database/models\.py$
+-   repo: https://github.com/awslabs/git-secrets
+    # rev: 80230afa8c8bcd6b4aefebec422f8a0755e0e4b8
+    # rev: 1.3.0
+    rev: 5357e18bc27b42a827b6780564ea873a72ca1f01
+    hooks:
+    -   id: git-secrets
+        entry: git-secrets --scan
+        files: '.*'
+        exclude: '^\..*/'
+# TOOD(P2, Devx): Fun, some chat-gpt auto-corrects haha https://pypi.org/project/chatgpt-pre-commit-hooks/
