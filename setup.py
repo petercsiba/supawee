@@ -13,9 +13,9 @@ setup(
     # TODO(P2, Devx): Ideally automate this from requirements/common.txt
     # https://chat.openai.com/share/6d52958f-b71d-427a-ae01-9c9b1c8df140
     install_requires=[
-        # TODO(P3, Community): Actually test the basic version
-        'peewee>=3.0',
         'black',
+        'psycopg2>=2.0',
+        'peewee>=3.0',
     ],
     entry_points={
         'console_scripts': [
