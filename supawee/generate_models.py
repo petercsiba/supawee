@@ -1,9 +1,8 @@
 # Connects to your localdatabase,
 # re-generates the model.py file with Base models.
+import argparse
 import os
 import re
-
-import argparse
 import subprocess
 
 
@@ -38,7 +37,6 @@ def adjust_generated_models(model_file: str):
     # Add schema for table_name
     table_name_pattern = r"table_name = \"(\w*?)\""
     table_name_replacement_public = r'schema = "public"\n        table_name = "\1"'
-    table_name_replacement_auth = r'schema = "auth"\n        table_name = "\1"'
     data = re.sub(table_name_pattern, table_name_replacement_public, data)
     data = data.replace(
         'schema = "public"\n        table_name = "users"',
@@ -51,7 +49,8 @@ def adjust_generated_models(model_file: str):
     circular_deps_fields = ["merged_into"]
     for field_name in circular_deps_fields:
         pattern = re.compile(
-            f"    {field_name}" + r" = ForeignKeyField\([\s\S]*?\)", re.MULTILINE  # noqa
+            f"    {field_name}" + r" = ForeignKeyField\([\s\S]*?\)",
+            re.MULTILINE,  # noqa
         )
 
         # Text to replace with
@@ -73,13 +72,13 @@ def adjust_generated_models(model_file: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate example models.')
-    parser.add_argument('model_file', help='Path to the model file')
-    parser.add_argument('--host', default='localhost')
-    parser.add_argument('--port', default='54322')
-    parser.add_argument('--username', default='postgres')
-    parser.add_argument('--database', default='postgres')
-    parser.add_argument('--password', default='postgres')
+    parser = argparse.ArgumentParser(description="Generate example models.")
+    parser.add_argument("model_file", help="Path to the model file")
+    parser.add_argument("--host", default="localhost")
+    parser.add_argument("--port", default="54322")
+    parser.add_argument("--username", default="postgres")
+    parser.add_argument("--database", default="postgres")
+    parser.add_argument("--password", default="postgres")
     args = parser.parse_args()
 
     model_file = args.model_file
@@ -98,21 +97,27 @@ def main():
     # TODO(P1, devx): This is a terrible hack to coerce pwiz to create the auth.users model (which is linked so often).
     # Create a temporary table
     subprocess.run(
-        f"psql -h {host} -p {port} -U {username} -d {database} -c \"CREATE TABLE public.users AS SELECT * FROM auth.users WHERE FALSE;\"",
+        f"psql -h {host} -p {port} -U {username} -d {database} "
+        + '-c "CREATE TABLE public.users AS SELECT * FROM auth.users WHERE FALSE;"',
         shell=True,
         env=env,
     )
 
     # Generate models using pwiz
-    with open(model_file, 'w') as f:
-        subprocess.run(f"python -m pwiz -e postgresql -H {host} -p {port} -u {username} {database}", shell=True,
-                       stdout=f,
-                       env=env,
-                       )
+    with open(model_file, "w") as f:
+        subprocess.run(
+            f"python -m pwiz -e postgresql -H {host} -p {port} -u {username} {database}",
+            shell=True,
+            stdout=f,
+            env=env,
+        )
 
     # Drop the temporary table
-    subprocess.run(f"psql -h {host} -p {port} -U {username} -d {database} -c \"DROP TABLE public.users;\"", shell=True,
-                   env=env)
+    subprocess.run(
+        f'psql -h {host} -p {port} -U {username} -d {database} -c "DROP TABLE public.users;"',
+        shell=True,
+        env=env,
+    )
 
     # Format the model file
     subprocess.run(f"black {model_file}", shell=True)

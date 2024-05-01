@@ -1,10 +1,10 @@
 # SupaWee
 
 SupaWee is a Peewee model generation primarily to be used with Supabase (and other PostgresSQL).
-It intends to be what [sqlacodegen](https://pypi.org/project/sqlacodegen/) is for SQLAlchemy. 
+It intends to be what [sqlacodegen](https://pypi.org/project/sqlacodegen/) is for SQLAlchemy.
 
 Born out of laziness of learning the mainstream SQLAlchemy, and shivers of using plain SQL.
-I liked PeeWee as I am familiar with Django and seems lightweight to be deployed into AWS Lambdas or other edge functions. 
+I liked PeeWee as I am familiar with Django and seems lightweight to be deployed into AWS Lambdas or other edge functions.
 The generated models over just plain DB queries help with autocomplete and code navigation (e.g. what are the uses of `order.state`).
 
 ## Example models
@@ -37,7 +37,7 @@ class Users(BaseUsers):
 - Minimalistic so it can be easily packaged to Lambdas and Edge functions.
 - Easy setup^TM and integration with Supabase and PostgreSQL.
 
-BEWARE: This performs one *terrible hack* including dropping local temp table `public.users` to generate `auth.users`. 
+BEWARE: This performs one *terrible hack* including dropping local temp table `public.users` to generate `auth.users`.
 
 
 ## Installation
@@ -74,7 +74,7 @@ supawee example/models.py
 
 ## Development Setup
 
-In case you want to contribute! 
+In case you want to contribute!
 
 ### Setup
 ```shell
@@ -88,7 +88,7 @@ The package creator used `pyenv virtualenv 3.9.16 supawee`
 ```shell
 pip install -r requirements/common.txt -r requirements/local.txt
 ```
- 
+
 ### Testing
 TODO I promise!
 
@@ -99,10 +99,10 @@ python -m supawee.generate_models
 
 # proper way
 pip install -e .
-supawee example/models.py 
+supawee example/models.py
 ```
 
-NOTE: You would need a local PostgreSQL Server running (e.g. `supabase start`). 
+NOTE: You would need a local PostgreSQL Server running (e.g. `supabase start`).
 
 # FAQ
 ### But there is Supabase Python SDK

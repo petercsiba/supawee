@@ -77,7 +77,9 @@ def connect_to_postgres_i_will_call_disconnect_i_promise(
         return _postgres
 
     kwargs = _get_postgres_kwargs(postgres_login_url)
-    print(f"postgres login url parsed into {kwargs['host']} port {kwargs['port']} for db {kwargs['database']}")
+    print(
+        f"postgres login url parsed into {kwargs['host']} port {kwargs['port']} for db {kwargs['database']}"
+    )
 
     _postgres = PostgresqlDatabase(**kwargs)
     # TODO(P2, reliability): Attach the function as a hook for when a connection is acquired (or when we re-connect)

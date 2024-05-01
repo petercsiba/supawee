@@ -1,8 +1,7 @@
-from peewee import *
-from playhouse.postgres_ext import *
-
 # NOTE: this file is fully generated, if you change something, it will go away
 from database.client import database_proxy
+from peewee import *
+from playhouse.postgres_ext import *
 
 
 class UnknownField(object):

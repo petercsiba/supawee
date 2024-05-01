@@ -3,7 +3,7 @@
 Ideally the test should:
 * Create an empty database
 * Create some table(s) like:
-  * Super simple 
+  * Super simple
   * Supabase default set (test users table)
   * Tables with circular dependencies
 * Connect to it (the generate_models.py does it)
