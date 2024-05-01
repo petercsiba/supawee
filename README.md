@@ -7,6 +7,31 @@ Born out of laziness of learning the mainstream SQLAlchemy, and shivers of using
 I liked PeeWee as I am familiar with Django and seems lightweight to be deployed into AWS Lambdas or other edge functions. 
 The generated models over just plain DB queries help with autocomplete and code navigation (e.g. what are the uses of `order.state`).
 
+## Example models
+
+```python
+# your/models.py
+class BaseUsers(BaseModel):
+    email = CharField(null=True)
+    id = UUIDField(null=True)
+```
+
+which you then can subclass to have relevant functionality right on the Model:
+
+```python
+# your/auth/related/objects/user.py
+from your.models import BaseUsers
+
+class Users(BaseUsers):
+    class Meta:
+        db_table = "users"
+
+    @staticmethod
+    def exists_by_email(email_raw: str) -> bool:
+        email = email_raw.lower()
+        return Users.select().where(Users.email == email).exists()
+```
+
 ## Features
 - Auto-generate PeeWee models from your local database (handles basic circular deps)
 - Minimalistic so it can be easily packaged to Lambdas and Edge functions.
@@ -14,21 +39,8 @@ The generated models over just plain DB queries help with autocomplete and code 
 
 BEWARE: This performs one *terrible hack* including dropping local temp table `public.users` to generate `auth.users`. 
 
-## Possible Future Things:
-- Understand if async and connection pooling work well with this
-  - Supabase has connection pooling: https://supabase.com/docs/guides/database/connecting-to-postgres#connection-pooler
-  - There is peewee async for some reason: https://peewee-async.readthedocs.io/en/latest/
-- Look into FastAPI template to maybe support that too https://github.com/AndyPythonCode/FastAPI-crud-with-peewee/tree/main/backend
-
-### !! DO NOT USE ON YOUR PRODUCTION DATABASE !! ###
-
-## Requirements
-
-- `psql` installed
-- can run `python -m pwiz ...`
 
 ## Installation
-
 Install SupaWee using pip:
 
 ```shell
@@ -37,9 +49,28 @@ pip install git+https://github.com/petercsiba/supawee.git
 
 And run it:
 ```shell
-# 6 required positional arguments: 'host', 'port', 'username', 'database', 'password', and 'model_file'
-supawee 
+# model_file, description='filepath to models.py which will have all base models'
+# '--host', default='localhost'
+# '--port', default='54322'
+# '--username', default='postgres'
+# '--database', default='postgres'
+# '--password', default='postgres'
+supawee example/models.py
 ```
+
+### !! DO NOT USE ON YOUR PRODUCTION DATABASE !! ###
+
+### Requirements
+
+- `psql` installed
+- can run `python -m pwiz ...`
+
+## Possible Future Things:
+- Understand if async and connection pooling work well with this
+  - Supabase has connection pooling: https://supabase.com/docs/guides/database/connecting-to-postgres#connection-pooler
+  - There is peewee async for some reason: https://peewee-async.readthedocs.io/en/latest/
+- Look into FastAPI template to maybe support that too https://github.com/AndyPythonCode/FastAPI-crud-with-peewee/tree/main/backend
+
 
 ## Development Setup
 
@@ -63,8 +94,15 @@ TODO I promise!
 
 Currently, best bet is to test manually with:
 ```shell
+# lazy way
 python -m supawee.generate_models
+
+# proper way
+pip install -e .
+supawee example/models.py 
 ```
+
+NOTE: You would need a local PostgreSQL Server running (e.g. `supabase start`). 
 
 # FAQ
 ### But there is Supabase Python SDK

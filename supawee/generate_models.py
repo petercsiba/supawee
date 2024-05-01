@@ -72,8 +72,26 @@ def adjust_generated_models(model_file: str):
         print("WARNING: There are reference cycle your program might NOT run")
 
 
-def main(host, port, username, database, password, model_file):
+def main():
+    parser = argparse.ArgumentParser(description='Generate example models.')
+    parser.add_argument('model_file', help='Path to the model file')
+    parser.add_argument('--host', default='localhost')
+    parser.add_argument('--port', default='54322')
+    parser.add_argument('--username', default='postgres')
+    parser.add_argument('--database', default='postgres')
+    parser.add_argument('--password', default='postgres')
+    args = parser.parse_args()
+
+    model_file = args.model_file
+    host = args.host
+    port = args.port
+    username = args.username
+    database = args.database
+    password = args.password
+
     env = os.environ.copy()
+    # Unfortunately, passing password in the command line arguments somehow does NOT work
+    # TODO(P0, correctness): Save the old one, and be sure to set it back.
     env["PGPASSWORD"] = password
 
     # !! BEWARE !!!
@@ -103,13 +121,4 @@ def main(host, port, username, database, password, model_file):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Generate example models.')
-    parser.add_argument('--host', default='localhost')
-    parser.add_argument('--port', default='54322')
-    parser.add_argument('--username', default='postgres')
-    parser.add_argument('--database', default='postgres')
-    parser.add_argument('--password', default='postgres')
-    parser.add_argument('--model_file', default='example/models.py')
-    args = parser.parse_args()
-
-    main(args.host, args.port, args.username, args.database, args.password, args.model_file)
+    main()
