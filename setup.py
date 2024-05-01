@@ -1,14 +1,14 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='SupaWee',
+    name='supawee',
     version='0.1.0',
     author='Peter Csiba',
     author_email='me@petercsiba.com',
     description='A Peewee integration for Supabase with programmatic model generation',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/petercsiba/SupaWee',
+    url='https://github.com/petercsiba/supawee',
     packages=find_packages(),
     # TODO(P2, Devx): Ideally automate this from requirements/common.txt
     # https://chat.openai.com/share/6d52958f-b71d-427a-ae01-9c9b1c8df140

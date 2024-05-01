@@ -32,7 +32,7 @@ BEWARE: This performs one *terrible hack* including dropping local temp table `p
 Install SupaWee using pip:
 
 ```bash
-pip install git+https://github.com/petercsiba/SupaWee.git
+pip install git+https://github.com/petercsiba/supawee.git
 ```
 
 ## Development Setup
