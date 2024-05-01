@@ -12,15 +12,15 @@ def adjust_generated_models(model_file: str):
         data = file.read()
 
     # Define the regex patterns and replacements
-    old_line_pattern = r"database = PostgresqlDatabase\(.*?\)"
+    old_line_pattern = r"example = PostgresqlDatabase\(.*?\)"
     new_line = (
         "# NOTE: this file is fully generated, if you change something, it will go away\n"
-        "from database.client import database_proxy"
+        "from example.client import database_proxy"
     )
     data = re.sub(old_line_pattern, new_line, data, flags=re.DOTALL)
 
-    # For BaseModel.Meta.database
-    data = data.replace("database = database", "database = database_proxy")
+    # For BaseModel.Meta.example
+    data = data.replace("example = example", "example = database_proxy")
 
     # Rename all classes that inherit from BaseModel with 'Base', e.g.:
     # class ClassName(BaseModel):
@@ -103,13 +103,13 @@ def main(host, port, username, database, password, model_file):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Generate database models.')
+    parser = argparse.ArgumentParser(description='Generate example models.')
     parser.add_argument('--host', default='localhost')
     parser.add_argument('--port', default='54322')
     parser.add_argument('--username', default='postgres')
     parser.add_argument('--database', default='postgres')
     parser.add_argument('--password', default='postgres')
-    parser.add_argument('--model_file', default='database/models.py')
+    parser.add_argument('--model_file', default='example/models.py')
     args = parser.parse_args()
 
     main(args.host, args.port, args.username, args.database, args.password, args.model_file)

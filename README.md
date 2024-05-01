@@ -31,8 +31,14 @@ BEWARE: This performs one *terrible hack* including dropping local temp table `p
 
 Install SupaWee using pip:
 
-```bash
+```shell
 pip install git+https://github.com/petercsiba/supawee.git
+```
+
+And run it:
+```shell
+# 6 required positional arguments: 'host', 'port', 'username', 'database', 'password', and 'model_file'
+supawee 
 ```
 
 ## Development Setup
@@ -55,6 +61,10 @@ pip install -r requirements/common.txt -r requirements/local.txt
 ### Testing
 TODO I promise!
 
+Currently, best bet is to test manually with:
+```shell
+python -m supawee.generate_models
+```
 
 # FAQ
 ### But there is Supabase Python SDK

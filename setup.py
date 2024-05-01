@@ -19,7 +19,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'supawee=generate_models:main',
+            'supawee=supawee.generate_models:main',
         ],
     },
     classifiers=[

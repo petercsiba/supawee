@@ -1,4 +1,3 @@
-peewee
 pre-commit
 psycopg2
 pytest
