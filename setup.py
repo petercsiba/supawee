@@ -15,7 +15,6 @@ setup(
     install_requires=[
         # TODO(P3, Community): Actually test the basic version
         'peewee>=3.0',
-        'supabase-py>=1.0.0',
         'black',
     ],
     entry_points={
