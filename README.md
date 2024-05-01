@@ -1,30 +1,26 @@
 # SupaWee
 
-SupaWee is a Peewee integration for Supabase that simplifies the process of using Peewee as your ORM in Python projects that interact with PostgreSQL.
+SupaWee is a Peewee model generation primarily to be used with Supabase (and other PostgresSQL).
+It intends to be what [sqlacodegen](https://pypi.org/project/sqlacodegen/) is for SQLAlchemy. 
 
-Was created out of frustration between tradeoffs of plain SQL and big SQLAlchemy (which I didn't know).
-The hope is to be in the middle ground of that spectrum.
-
-Yes, there is Supabase Python SDK but I want the ORM for ease of autocomplete, and code navigation (e.g. what are the uses of `order.state`).
-
-BEWARE: This performs one *terrible hack* including dropping temp table `public.users`. 
-
-```shell
-# Snapshot of Supabase Python SDK (released mid 2022):
-
-    for i in range(iterator):
-        value = {'vendor_id': vendor_id, 'product_name': fake.ecommerce_name(),
-                 'inventory_count': fake.random_int(1, 100), 'price': fake.random_int(45, 100)}
-        main_list.append(value)
-    data = supabase.table('Product').insert(main_list).execute()
-```
-https://supabase.com/blog/loading-data-supabase-python#inserting-data-into-supabase
+Born out of laziness of learning the mainstream SQLAlchemy, and shivers of using plain SQL.
+I liked PeeWee as I am familiar with Django and seems lightweight to be deployed into AWS Lambdas or other edge functions. 
+The generated models over just plain DB queries help with autocomplete and code navigation (e.g. what are the uses of `order.state`).
 
 ## Features
-
-- Easy setup^TM and integration with Supabase and PostgreSQL.
 - Auto-generate PeeWee models from your local database (handles basic circular deps)
 - Minimalistic so it can be easily packaged to Lambdas and Edge functions.
+- Easy setup^TM and integration with Supabase and PostgreSQL.
+
+BEWARE: This performs one *terrible hack* including dropping local temp table `public.users` to generate `auth.users`. 
+
+## Possible Future Things:
+- Understand if async and connection pooling work well with this
+  - Supabase has connection pooling: https://supabase.com/docs/guides/database/connecting-to-postgres#connection-pooler
+  - There is peewee async for some reason: https://peewee-async.readthedocs.io/en/latest/
+- Look into FastAPI template to maybe support that too https://github.com/AndyPythonCode/FastAPI-crud-with-peewee/tree/main/backend
+
+### !! DO NOT USE ON YOUR PRODUCTION DATABASE !! ###
 
 ## Requirements
 
@@ -58,3 +54,18 @@ pip install -r requirements/common.txt -r requirements/local.txt
  
 ### Testing
 TODO I promise!
+
+
+# FAQ
+### But there is Supabase Python SDK
+Yes you right, but I dislike using plain strings for column and table names:
+```shell
+# Snapshot of Supabase Python SDK (released mid 2022):
+
+    for i in range(iterator):
+        value = {'vendor_id': vendor_id, 'product_name': fake.ecommerce_name(),
+                 'inventory_count': fake.random_int(1, 100), 'price': fake.random_int(45, 100)}
+        main_list.append(value)
+    data = supabase.table('Product').insert(main_list).execute()
+```
+https://supabase.com/blog/loading-data-supabase-python#inserting-data-into-supabase
