@@ -1,7 +1,8 @@
+import signal
 from contextlib import contextmanager
 from typing import Any, Generator, Optional
 
-from peewee import DatabaseProxy, OperationalError, PostgresqlDatabase
+from peewee import DatabaseProxy, PostgresqlDatabase
 
 # `database_proxy` is referenced from the generated models.py
 # The DatabaseProxy simply defers the configuration of the database until a later time,
@@ -29,16 +30,9 @@ def _get_postgres_kwargs(postgres_login_url):
     if postgres_login_url is None:
         raise ValueError("postgres_login_url is required, None given")
 
-    # AWS Lambda only supports archaic package versions, also some passwords might contain wildcards like ? or &
-    # parsed_url = urlparse(postgres_login_url)
-    #
-    # res = {
-    #     "database": parsed_url.path[1:],
-    #     "user": parsed_url.username,
-    #     "password": parsed_url.password,
-    #     "host": parsed_url.hostname,
-    #     "port": parsed_url.port,
-    # }
+    # AWS Lambda only supports archaic package versions,
+    #   also some passwords might contain wildcards like ? or & (yeah, thank you G chrome password manager)
+    # This didn't work: parsed_url = urlparse(postgres_login_url)
     url = _remove_postgres_scheme(postgres_login_url)
     user, rest = url.split("@")[0], url.split("@")[1]
     login, password = user.split(":")[0], user.split(":")[1]
@@ -61,24 +55,22 @@ def _is_database_connected():
     return _postgres is not None and not _postgres.is_closed()
 
 
-def set_statement_timeout(db):
-    print("NOTE: Setting postgres client-side timeout for this session to 1 minute")
-    db.execute_sql("SET statement_timeout TO 60000")  # 60000 milliseconds = 1 minute
-
-
 # Prefer using `with connect_to_postgres` when you can.
 # Only use the return value if you know what you are doing.
 def connect_to_postgres_i_will_call_disconnect_i_promise(
     postgres_login_url: str,
+    statement_timeout: int = None,
 ) -> PostgresqlDatabase:
     global _postgres
     if _is_database_connected():
-        print("database connection already initialized, skipping")
+        print("supawee.client: database connection already initialized, skipping")
         return _postgres
 
+    # kwargs also has the password, so do not print all of it
     kwargs = _get_postgres_kwargs(postgres_login_url)
     print(
-        f"postgres login url parsed into {kwargs['host']} port {kwargs['port']} for db {kwargs['database']}"
+        f"supawee.client: postgres login url parsed into {kwargs['host']} port {kwargs['port']}"
+        f" for db {kwargs['database']}"
     )
 
     _postgres = PostgresqlDatabase(**kwargs)
@@ -88,14 +80,34 @@ def connect_to_postgres_i_will_call_disconnect_i_promise(
     # })
     _postgres.connect()
     _postgres.execute_sql("SELECT 1")
-    set_statement_timeout(_postgres)
+    if statement_timeout:
+        set_statement_timeout(_postgres, statement_timeout)
     database_proxy.initialize(_postgres)
     return _postgres
 
 
 def disconnect_from_postgres_as_i_promised():
-    if _postgres is not None:
+    if _is_database_connected():
+        print("supawee.client: closing connection to postgres database")
         _postgres.close()
+
+
+# Signal handler for graceful shutdown
+def signal_handler(signum, frame):
+    print("supawee.client: shutdown signal received - cleaning up...")
+    disconnect_from_postgres_as_i_promised()
+
+
+# Register signal handlers
+signal.signal(signal.SIGINT, signal_handler)  # Handle Ctrl+C
+signal.signal(signal.SIGTERM, signal_handler)  # Handle termination requests
+
+
+def set_statement_timeout(db, seconds: int = 60):
+    print(
+        f"supawee.client: setting postgres client-side timeout for this session to {seconds} seconds"
+    )
+    db.execute_sql(f"SET statement_timeout TO {1000 * seconds}")
 
 
 @contextmanager
@@ -103,9 +115,5 @@ def connect_to_postgres(postgres_login_url: str) -> Generator[Any, None, None]:
     try:
         connect_to_postgres_i_will_call_disconnect_i_promise(postgres_login_url)
         yield
-    except OperationalError:
-        print("Couldn't connect to the database, running in offline mode.")
-        yield
     finally:
-        print("closing connection to postgres database")
         disconnect_from_postgres_as_i_promised()

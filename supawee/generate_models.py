@@ -68,7 +68,7 @@ def adjust_generated_models(model_file: str):
     # https://docs.peewee-orm.com/en/latest/peewee/models.html#circular-foreign-key-dependencies
     # P1(devx): Update model gen to handle these.
     if "Possible reference cycle" in data:
-        print("WARNING: There are reference cycle your program might NOT run")
+        print("supawee WARNING: There are reference cycle your program might NOT run")
 
 
 def main():
