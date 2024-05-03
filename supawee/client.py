@@ -1,4 +1,3 @@
-import signal
 from contextlib import contextmanager
 from typing import Any, Generator, Optional
 
@@ -91,17 +90,6 @@ def disconnect_from_postgres_as_i_promised():
     if _is_database_connected():
         print("supawee.client: closing connection to postgres database")
         _postgres.close()
-
-
-# Signal handler for graceful shutdown
-def signal_handler(signum, frame):
-    print("supawee.client: shutdown signal received - cleaning up...")
-    disconnect_from_postgres_as_i_promised()
-
-
-# Register signal handlers
-signal.signal(signal.SIGINT, signal_handler)  # Handle Ctrl+C
-signal.signal(signal.SIGTERM, signal_handler)  # Handle termination requests
 
 
 def set_statement_timeout(db, seconds: int = 60):
