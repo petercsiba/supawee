@@ -5,7 +5,21 @@ It intends to be what [sqlacodegen](https://pypi.org/project/sqlacodegen/) is fo
 
 Born out of laziness of learning the mainstream SQLAlchemy, and shivers of using plain SQL.
 I liked PeeWee as I am familiar with Django and seems lightweight to be deployed into AWS Lambdas or other edge functions.
-The generated models over just plain DB queries help with autocomplete and code navigation (e.g. what are the uses of `order.state`).
+So wrote these two helper scripts to interface Python with PostgreSQL in a minimalistic way.
+
+## Connecting to the database
+
+`supawee` uses `peewee.DatabaseProxy` as the `model.meta.database`.
+This is so we can defer initialization of `peewee.PostgresqlDatabase` which is just too heavy.
+
+You can connect to your PostgreSQL Server when you ready with login url:
+```python
+from supawee.client import connect_to_postgres
+
+with connect_to_postgres("postgresql://postgres:postgres@localhost:54322/postgres"):
+    do_your_stuff()
+```
+using login url instead of the 5 parameters means you only have to deal with one environment variable!
 
 ## Example models
 
@@ -19,8 +33,8 @@ class BaseUsers(BaseModel):
 which you then can subclass to have relevant functionality right on the Model:
 
 ```python
-# your/auth/related/objects/user.py
-from your.models import BaseUsers
+# your/auth/related/objects/folder/user.py
+from supawee.generated.models import BaseUsers
 
 class Users(BaseUsers):
     class Meta:

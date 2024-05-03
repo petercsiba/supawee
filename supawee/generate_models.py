@@ -10,16 +10,18 @@ def adjust_generated_models(model_file: str):
     with open(model_file, "r") as file:
         data = file.read()
 
-    # Define the regex patterns and replacements
-    old_line_pattern = r"example = PostgresqlDatabase\(.*?\)"
+    # `pwiz` generates model code with the super-heave PostgresqlDatabase object requiring it to be initiated ASAP.
+    # So here we wrap it with peewee.DatabaseProxy which you can initiate (and connect) through
+    # supawee.client.connect_to_postgres_i_will_call_disconnect_i_promise
+    old_line_pattern = r"database = PostgresqlDatabase\(.*?\)"
     new_line = (
         "# NOTE: this file is fully generated, if you change something, it will go away\n"
-        "from example.client import database_proxy"
+        "from database.client import database_proxy"
     )
     data = re.sub(old_line_pattern, new_line, data, flags=re.DOTALL)
 
-    # For BaseModel.Meta.example
-    data = data.replace("example = example", "example = database_proxy")
+    # For BaseModel.Meta.database
+    data = data.replace("database = database", "database = database_proxy")
 
     # Rename all classes that inherit from BaseModel with 'Base', e.g.:
     # class ClassName(BaseModel):
