@@ -16,7 +16,9 @@ def adjust_generated_models(model_file: str):
     old_line_pattern = r"database = PostgresqlDatabase\(.*?\)"
     new_line = (
         "# NOTE: this file is fully generated, if you change something, it will go away\n"
-        "from database.client import database_proxy"
+        "# database_proxy is an abstraction around PostgresqlDatabase so we can defer initialization after model\n"
+        "# declaration (i.e. the BaseModels don't need to import that heavy object).\n"
+        "from supabase.client import database_proxy"
     )
     data = re.sub(old_line_pattern, new_line, data, flags=re.DOTALL)
 
