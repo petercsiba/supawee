@@ -5,6 +5,9 @@ import os
 import re
 import subprocess
 
+# Previously was BaseModel which somewhat conflicted with pydantic.
+BASE_MODEL_NAME = "BaseDatabaseModel"
+
 
 def adjust_generated_models(model_file: str):
     with open(model_file, "r") as file:
@@ -17,20 +20,20 @@ def adjust_generated_models(model_file: str):
     new_line = (
         "# NOTE: this file is fully generated, if you change something, it will go away\n"
         "# database_proxy is an abstraction around PostgresqlDatabase so we can defer initialization after model\n"
-        "# declaration (i.e. the BaseModels don't need to import that heavy object).\n"
+        "# declaration (i.e. the BaseDatabaseModels don't need to import that heavy object).\n"
         "from supawee.client import database_proxy"
     )
     data = re.sub(old_line_pattern, new_line, data, flags=re.DOTALL)
 
-    # For BaseModel.Meta.database
+    # For BaseDatabaseModel.Meta.database
     data = data.replace("database = database", "database = database_proxy")
 
-    # Rename all classes that inherit from BaseModel with 'Base', e.g.:
-    # class ClassName(BaseModel):
+    # Rename all classes that inherit from BaseDatabaseModel with 'Base', e.g.:
+    # class ClassName(BaseDatabaseModel):
     # replace to
-    # class BaseClassName(BaseModel):
+    # class BaseClassName(BaseDatabaseModel):
     base_model_pattern = r"class (\w*?)(\(BaseModel\))"
-    replacement = r"class Base\1\2"
+    replacement = r"class Base\1(" + BASE_MODEL_NAME + ")"
     data = re.sub(base_model_pattern, replacement, data)
 
     # Replace model=Users with model=BaseUsers (might be too lenient)
@@ -47,7 +50,7 @@ def adjust_generated_models(model_file: str):
         'schema = "auth"\n        table_name = "users"',
     )
 
-    data = data.replace("BaseBaseModel", "BaseModel")
+    data = data.replace("class BaseModel", "class " + BASE_MODEL_NAME)
 
     # Hacks for circular deps
     circular_deps_fields = ["merged_into"]

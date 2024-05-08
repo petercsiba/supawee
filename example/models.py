@@ -1,7 +1,9 @@
-# NOTE: this file is fully generated, if you change something, it will go away
 from peewee import *
 from playhouse.postgres_ext import *
 
+# NOTE: this file is fully generated, if you change something, it will go away
+# database_proxy is an abstraction around PostgresqlDatabase so we can defer initialization after model
+# declaration (i.e. the BaseDatabaseModels don't need to import that heavy object).
 from supawee.client import database_proxy
 
 
@@ -10,12 +12,12 @@ class UnknownField(object):
         pass
 
 
-class BaseModel(Model):
+class BaseDatabaseModel(Model):
     class Meta:
         database = database_proxy
 
 
-class BaseUsers(BaseModel):
+class BaseUsers(BaseDatabaseModel):
     aud = CharField(null=True)
     banned_until = DateTimeField(null=True)
     confirmation_sent_at = DateTimeField(null=True)
@@ -34,6 +36,7 @@ class BaseUsers(BaseModel):
     id = UUIDField(null=True)
     instance_id = UUIDField(null=True)
     invited_at = DateTimeField(null=True)
+    is_anonymous = BooleanField(null=True)
     is_sso_user = BooleanField(null=True)
     is_super_admin = BooleanField(null=True)
     last_sign_in_at = DateTimeField(null=True)
