@@ -1,6 +1,8 @@
 # Connects to your localdatabase,
 # re-generates the model.py file with Base models.
 import argparse
+import difflib
+import logging
 import os
 import re
 import subprocess
@@ -9,9 +11,29 @@ import subprocess
 BASE_MODEL_NAME = "BaseDatabaseModel"
 
 
-def adjust_generated_models(model_file: str, circular_deps_fields: list[str]):
+def _print_diff(orig_data: str, data: str):
+    # Split the strings into lines
+    lines1 = orig_data.splitlines()
+    lines2 = data.splitlines()
+
+    # Generate the diff
+    diff = difflib.unified_diff(lines1, lines2, lineterm="")
+
+    # Write the diff to a file
+    with open("/tmp/adjust_generated_models_output.txt", "w") as file:
+        for line in diff:
+            file.write(line + "\n")
+
+    # Optionally, log that the diff has been written
+    logging.debug("Diff has been written to /tmp/adjust_generated_models_output.txt")
+
+
+def adjust_generated_models(
+    model_file: str, circular_deps_fields: list[str], is_print_diff: bool = False
+):
     with open(model_file, "r") as file:
-        data = file.read()
+        orig_data = file.read()
+    data = orig_data
 
     # `pwiz` generates model code with the super-heave PostgresqlDatabase object requiring it to be initiated ASAP.
     # So here we wrap it with peewee.DatabaseProxy which you can initiate (and connect) through
@@ -71,6 +93,9 @@ def adjust_generated_models(model_file: str, circular_deps_fields: list[str]):
     with open(model_file, "w") as file:
         file.write(data)
 
+    if is_print_diff:
+        _print_diff(orig_data, data)
+
     # NOTE: For reference cycles leading to "Possible reference cycle: account" in comments
     #   and "NameError: name 'BaseAccount' is not defined" during run-time there are some workarounds.
     # https://docs.peewee-orm.com/en/latest/peewee/models.html#circular-foreign-key-dependencies
@@ -96,7 +121,21 @@ def main():
         default="",
         help="Comma-separated field names for handling circular dependencies (without the _id suffix)",
     )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Enable verbose logging"
+    )
     args = parser.parse_args()
+
+    # Set logging level based on verbose flag
+    if args.verbose:
+        logging.basicConfig(
+            level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+        )
+        logging.debug("Verbose logging enabled.")
+    else:
+        logging.basicConfig(
+            level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+        )
 
     model_file = args.model_file
     host = args.host
@@ -109,11 +148,14 @@ def main():
     env = os.environ.copy()
     # Unfortunately, passing password in the command line arguments somehow does NOT work
     # TODO(P0, correctness): Save the old one, and be sure to set it back.
+    logging.debug("PGPASSWORD env variable is set to the --password param.")
     env["PGPASSWORD"] = password
 
     # !! BEWARE !!!
     # TODO(P1, devx): This is a terrible hack to coerce pwiz to create the auth.users model (which is linked so often).
-    # Create a temporary table
+    logging.debug(
+        "Creating a temporary table public.users as a hack to coerce pwiz to create the auth.users model."
+    )
     subprocess.run(
         f"psql -h {host} -p {port} -U {username} -d {database} "
         + '-c "CREATE TABLE public.users AS SELECT * FROM auth.users WHERE FALSE;"',
@@ -122,15 +164,22 @@ def main():
     )
 
     # Generate models using pwiz
+    # TODO(P1, ux): Sometimes this generates a single-quote string file which in some cases leads to compile errors.
+    #   https://github.com/coleifer/peewee/issues/2922#issuecomment-2331534413
     with open(model_file, "w") as f:
+        command = (
+            f"python -m pwiz -e postgresql -H {host} -p {port} -u {username} {database}"
+        )
+        logging.debug(f"Running model gen command: '{command}'")
         subprocess.run(
-            f"python -m pwiz -e postgresql -H {host} -p {port} -u {username} {database}",
+            command,
             shell=True,
             stdout=f,
             env=env,
         )
 
     # Drop the temporary table
+    logging.debug("Dropping the temporary table public.users.")
     subprocess.run(
         f'psql -h {host} -p {port} -U {username} -d {database} -c "DROP TABLE public.users;"',
         shell=True,
@@ -139,7 +188,10 @@ def main():
 
     # Format the model file
     subprocess.run(f"black {model_file}", shell=True)
-    adjust_generated_models(model_file, circular_deps_fields)
+    adjust_generated_models(
+        model_file, circular_deps_fields, is_print_diff=args.verbose
+    )
+    logging.debug("Running black on the generated model file")
     subprocess.run(f"black {model_file}", shell=True)
 
 
