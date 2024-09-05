@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="supawee",
-    version="0.1.0",
+    version="0.1.1",
     author="Peter Csiba",
     author_email="me@petercsiba.com",
     description="A Peewee integration for Supabase with programmatic model generation",

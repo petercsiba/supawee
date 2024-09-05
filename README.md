@@ -77,7 +77,7 @@ supawee example/models.py
 ### Requirements
 
 - `psql` installed
-- can run `python -m pwiz ...`
+- can run `python -m pwiz ...`  (`pwiz` is a part of `peewee` package)
 
 ## Possible Future Things:
 - Understand if async and connection pooling work well with this
