@@ -1,5 +1,18 @@
 from setuptools import find_packages, setup
 
+
+# Function to read the requirements file
+def parse_requirements(filename):
+    """Load requirements from a pip requirements file."""
+    with open(filename) as req_file:
+        lines = req_file.readlines()
+    # Filter out comments and empty lines, and ensure we have no leading/trailing whitespace
+    requirements = [
+        line.strip() for line in lines if line.strip() and not line.startswith("#")
+    ]
+    return requirements
+
+
 setup(
     name="supawee",
     version="0.1.1",
@@ -10,13 +23,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/petercsiba/supawee",
     packages=find_packages(),
-    # TODO(P2, Devx): Ideally automate this from requirements/common.txt
-    # https://chat.openai.com/share/6d52958f-b71d-427a-ae01-9c9b1c8df140
-    install_requires=[
-        "black",
-        "psycopg2>=2.0",
-        "peewee>=3.0",
-    ],
+    install_requires=parse_requirements("requirements/common.txt"),
     entry_points={
         "console_scripts": [
             "supawee=supawee.generate_models:main",
