@@ -69,7 +69,7 @@ def connect_to_postgres_i_will_call_disconnect_i_promise(
     kwargs = _get_postgres_kwargs(postgres_login_url)
     print(
         f"supawee.client: postgres login url parsed into {kwargs['host']} port {kwargs['port']}"
-        f" for use {kwargs['user']} db {kwargs['database']}"
+        f" for user {kwargs['user']} db {kwargs['database']}"
     )
 
     _postgres = PostgresqlDatabase(**kwargs)
